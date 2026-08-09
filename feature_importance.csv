@@ -1,0 +1,15 @@
+Feature,Importance
+mental_health,0.3631111
+study_hours,0.22884026
+social_media_hours,0.07531742
+attendance,0.07303912
+physical_activity,0.048709355
+internet_quality,0.047959454
+sleep_hours,0.030602748
+previous_scores,0.028759107
+motivation_level,0.025836196
+age,0.020421326
+parental_education,0.020162925
+family_income,0.01581493
+part_time_job,0.015091654
+gender,0.006334336
