@@ -510,7 +510,24 @@ elif page=="📊 Understand My Data":
         cols=st.columns(2)
         for col,(feature,title,question) in zip(cols,charts[i:i+2]):
             with col:
-                fig=px.scatter(d,x=feature,y="exam_score",trendline="ols",title=title,hover_data=["gender","motivation_level"])
+                if feature not in d.columns or "exam_score" not in d.columns:
+                    st.warning(f"Required column '{feature}' is not available in the dataset.")
+                    continue
+                chart_d=d[[feature,"exam_score"]].copy()
+                chart_d[feature]=pd.to_numeric(chart_d[feature],errors="coerce")
+                chart_d["exam_score"]=pd.to_numeric(chart_d["exam_score"],errors="coerce")
+                chart_d=chart_d.dropna()
+                if chart_d.empty:
+                    st.info(f"No valid numeric data available for {title} after filtering.")
+                    continue
+                # Use a plain scatter plot here so the deployed app does not
+                # require statsmodels just for an optional OLS trendline.
+                plot_cols=[c for c in ["gender","motivation_level"] if c in d.columns]
+                fig = px.scatter(
+                    chart_d,
+                    x=feature,
+                    y="exam_score"
+                )
                 st.plotly_chart(dark_fig(fig),use_container_width=True)
                 st.markdown(f'<div class="info"><b>Student question:</b> {question}<br><b>Remember:</b> This is an association in the dataset, not proof that one factor causes marks.</div>',unsafe_allow_html=True)
 
@@ -529,8 +546,18 @@ elif page=="📊 Understand My Data":
         st.plotly_chart(dark_fig(px.box(d,x="internet_quality",y="exam_score",title="🌐 Internet Quality vs Exam Score")),use_container_width=True)
 
     st.markdown("<div class='section-title'>🔥 Correlation Heatmap</div>",unsafe_allow_html=True)
-    corr=d.select_dtypes(include=np.number).corr()
-    st.plotly_chart(px.imshow(corr,text_auto=".2f",aspect="auto",title="Which numeric factors move together?"),use_container_width=True)
+    numeric_d = d.select_dtypes(include=np.number)
+    if numeric_d.shape[1] >= 2:
+        corr=numeric_d.corr()
+        heat=px.imshow(
+            corr,
+            text_auto=".2f",
+            aspect="auto",
+            title="Which numeric factors move together?"
+        )
+        st.plotly_chart(dark_fig(heat,420),use_container_width=True)
+    else:
+        st.info("Not enough numeric columns are available for a correlation heatmap with the current filters.")
     st.markdown('<div class="tip">🔥 <b>Heatmap:</b> +1 means strong positive movement, -1 means strong negative movement, and 0 means weak linear relationship. Correlation does not prove causation.</div>',unsafe_allow_html=True)
 
 # ============================================================
