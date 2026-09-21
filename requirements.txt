@@ -6,3 +6,4 @@ matplotlib
 seaborn
 xgboost
 plotly
+pwdlib[argon2]
