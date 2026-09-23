@@ -1,5 +1,7 @@
 import sqlite3
 from pathlib import Path
+from datetime import datetime
+from zoneinfo import ZoneInfo
 from pwdlib import PasswordHash
 
 password_hash = PasswordHash.recommended()
@@ -50,7 +52,7 @@ def create_tables():
             physical_activity REAL,
             mental_health REAL,
             previous_scores REAL,
-            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            created_at TIMESTAMP,
             FOREIGN KEY (student_id) REFERENCES students(id)
         )
     """)
@@ -198,6 +200,10 @@ def save_prediction(
     conn = get_connection()
     cursor = conn.cursor()
 
+    created_at = datetime.now(ZoneInfo("Asia/Kolkata")).strftime(
+        "%Y-%m-%d %H:%M:%S"
+    )
+
     cursor.execute("""
         INSERT INTO predictions (
             student_id,
@@ -209,9 +215,10 @@ def save_prediction(
             social_media_hours,
             physical_activity,
             mental_health,
-            previous_scores
+            previous_scores,
+            created_at
         )
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     """, (
         student_id,
         predicted_score,
@@ -222,7 +229,8 @@ def save_prediction(
         social_media_hours,
         physical_activity,
         mental_health,
-        previous_scores
+        previous_scores,
+        created_at
     ))
 
     conn.commit()

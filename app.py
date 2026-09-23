@@ -1,11 +1,13 @@
 
 import streamlit as st
+import streamlit.components.v1 as components
 import pandas as pd
 import numpy as np
 import joblib
 import plotly.express as px
 import plotly.graph_objects as go
 from datetime import datetime
+from zoneinfo import ZoneInfo
 from database.database import (
     create_tables,
     register_student,
@@ -290,7 +292,7 @@ st.sidebar.markdown(
 )
 
 st.sidebar.markdown("---")
-
+previous_page = st.session_state.get("_last_page", None)
 page = st.sidebar.radio(
     "Navigation",
     [
@@ -303,7 +305,49 @@ page = st.sidebar.radio(
         "🕘 Prediction History"
     ]
 )
+if previous_page is not None and previous_page != page:
+    components.html(
+        """
+        <script>
+        function scrollToTop() {
+            try {
+                const parentDoc = window.parent.document;
 
+                const selectors = [
+                    '[data-testid="stAppViewContainer"]',
+                    '[data-testid="stMain"]',
+                    '[data-testid="stMainBlockContainer"]',
+                    'section.main',
+                    '.main',
+                    '.stAppViewContainer'
+                ];
+
+                selectors.forEach(function(selector) {
+                    const elements = parentDoc.querySelectorAll(selector);
+
+                    elements.forEach(function(el) {
+                        el.scrollTop = 0;
+                    });
+                });
+
+                window.parent.scrollTo(0, 0);
+                parentDoc.documentElement.scrollTop = 0;
+                parentDoc.body.scrollTop = 0;
+
+            } catch (e) {
+                console.log("Scroll reset:", e);
+            }
+        }
+
+        setTimeout(scrollToTop, 50);
+        setTimeout(scrollToTop, 200);
+        setTimeout(scrollToTop, 500);
+        </script>
+        """,
+        height=0
+    )
+
+st.session_state["_last_page"] = page
 st.sidebar.markdown("---")
 
 if st.sidebar.button("🚪 Logout", use_container_width=True):
@@ -1016,7 +1060,7 @@ elif page=="🤖 My Prediction":
                 values["mental_health"],
                 values["previous_scores"]
             )
-            now=datetime.now().strftime("%d-%m-%Y %I:%M %p")
+            
             st.session_state.history.insert(0,{"Time":now,"Student":st.session_state.name,"Predicted Score":score,"Academic Health":h,"Performance":label})
             st.session_state.history=st.session_state.history[:10]
             st.session_state.last_values=values.copy()
@@ -2128,60 +2172,7 @@ elif page=="🧠 How AI Decides":
         st.warning(
             f"Feature importance could not be displayed: {e}"
         )
-
-    # --------------------------------------------------------
-    # MODEL PERFORMANCE
-    # --------------------------------------------------------
-    try:
-
-        res = pd.read_csv(
-            "model_results.csv"
-        )
-
-        st.markdown(
-            "<div class='section-title'>📈 How Well Did the Model Perform?</div>",
-            unsafe_allow_html=True
-        )
-
-        st.dataframe(
-            res,
-            use_container_width=True,
-            hide_index=True
-        )
-
-        st.markdown("""
-        <div class="card">
-
-          <h3>📖 Understanding the Numbers</h3>
-
-          <p>
-          <b>R²:</b>
-          Shows how much of the variation in the target values
-          is explained by the model.
-          </p>
-
-          <p>
-          <b>MAE:</b>
-          Shows the average absolute difference between
-          predicted and actual values.
-          Lower values generally indicate smaller errors.
-          </p>
-
-          <p>
-          <b>RMSE:</b>
-          Measures prediction error while giving more weight
-          to larger errors.
-          </p>
-
-        </div>
-        """, unsafe_allow_html=True)
-
-    except Exception as e:
-
-        st.info(
-            f"Model results are not available: {e}"
-        )
-
+        
     # --------------------------------------------------------
     # FINAL NOTE
     # --------------------------------------------------------
