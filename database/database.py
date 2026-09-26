@@ -78,6 +78,18 @@ def register_student(
     cursor = conn.cursor()
 
     try:
+        # Check if this email already exists
+        cursor.execute(
+            "SELECT id FROM students WHERE email = ?",
+            (email,)
+        )
+
+        existing_student = cursor.fetchone()
+
+        if existing_student:
+            return False, "Email already registered."
+
+        # Insert new student
         cursor.execute("""
             INSERT INTO students
             (name, email, password, college, branch, year, roll_number)
@@ -96,13 +108,12 @@ def register_student(
 
         return True, "Account created successfully!"
 
-    except sqlite3.IntegrityError:
-        return False, "Email already registered."
+    except sqlite3.Error as e:
+        print("DATABASE ERROR:", e)
+        return False, f"Database error: {e}"
 
     finally:
         conn.close()
-
-
 # Login student
 def login_student(email, password):
     conn = get_connection()
