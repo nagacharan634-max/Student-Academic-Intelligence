@@ -1044,6 +1044,7 @@ elif page=="🤖 My Prediction":
 
     if st.button("🚀 Predict My Academic Performance",type="primary",use_container_width=True):
         try:
+            now = datetime.now(ZoneInfo("Asia/Kolkata")).strftime("%d-%m-%Y %I:%M %p")
             score=predict(values)
             h=health(values)
             label=level(score)

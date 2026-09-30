@@ -62,58 +62,60 @@ def create_tables():
 
 
 # Register a new student
-def register_student(
-    name,
-    email,
-    password,
-    college,
-    branch,
-    year,
-    roll_number
-):
-    email = email.strip().lower()
-    password = password_hash.hash(password.strip())
+def register_student(name, email, password, college, branch, year, roll_number):
 
-    conn = get_connection()
+    email = email.strip().lower()
+    password = password.strip()
+
+    # Hash password before storing it
+    password = password_hash.hash(password)
+
+    conn = sqlite3.connect(DB_PATH)
     cursor = conn.cursor()
 
     try:
-        # Check if this email already exists
+
+        # Check email separately
         cursor.execute(
-            "SELECT id FROM students WHERE email = ?",
+            "SELECT id FROM students WHERE LOWER(email) = ?",
             (email,)
         )
 
-        existing_student = cursor.fetchone()
+        existing = cursor.fetchone()
 
-        if existing_student:
+        if existing:
+            conn.close()
             return False, "Email already registered."
 
-        # Insert new student
-        cursor.execute("""
+        # Create account
+        cursor.execute(
+            """
             INSERT INTO students
             (name, email, password, college, branch, year, roll_number)
             VALUES (?, ?, ?, ?, ?, ?, ?)
-        """, (
-            name,
-            email,
-            password,
-            college,
-            branch,
-            year,
-            roll_number
-        ))
+            """,
+            (
+                name.strip(),
+                email,
+                password,
+                college.strip(),
+                branch,
+                year,
+                roll_number.strip()
+            )
+        )
 
         conn.commit()
+        conn.close()
 
         return True, "Account created successfully!"
 
     except sqlite3.Error as e:
-        print("DATABASE ERROR:", e)
-        return False, f"Database error: {e}"
 
-    finally:
+        conn.rollback()
         conn.close()
+
+        return False, f"Database error: {e}"
 # Login student
 def login_student(email, password):
     conn = get_connection()

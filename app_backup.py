@@ -7,7 +7,7 @@ import joblib
 import plotly.express as px
 import plotly.graph_objects as go
 from datetime import datetime
-
+from zoneinfo import ZoneInfo
 # ============================================================
 # STUDENT ACADEMIC INTELLIGENCE SYSTEM - V3
 # ============================================================
@@ -255,6 +255,7 @@ if page=="🏠 Home":
 # ============================================================
 # PREDICTION
 # ============================================================
+
 elif page=="🤖 My Prediction":
     st.markdown("""
     <div class="hero">
@@ -316,13 +317,15 @@ elif page=="🤖 My Prediction":
     }
 
     if st.button("🚀 Predict My Academic Performance",type="primary",use_container_width=True):
-        try:
-            score=predict(values)
-            h=health(values)
-            label=level(score)
-            now=datetime.now().strftime("%d-%m-%Y %I:%M %p")
-            if student_name.strip():
-                st.session_state.name=student_name.strip()
+    try:
+        now = datetime.now(ZoneInfo("Asia/Kolkata")).strftime("%d-%m-%Y %I:%M %p")
+
+        score=predict(values)
+        h=health(values)
+        label=level(score)
+
+        if student_name.strip():
+            st.session_state.name=student_name.strip()
             st.session_state.roll_number=roll_number.strip()
             st.session_state.branch=branch
             st.session_state.year=year
